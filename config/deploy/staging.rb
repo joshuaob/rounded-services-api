@@ -6,8 +6,8 @@
 # server "example.com", user: "deploy", roles: %w{app db web}, my_property: :my_value
 # server "example.com", user: "deploy", roles: %w{app web}, other_property: :other_value
 # server "db.example.com", user: "deploy", roles: %w{db}
-server ENV['API_SERVER'], user: 'deploy', roles: %w{app}
-
+server '178.62.62.29', user: 'deploy', roles: %w{app}
+# server ::ENV['API_SERVER'], user: 'deploy', roles: %w{app}
 
 # role-based syntax
 # ==================
@@ -23,7 +23,8 @@ server ENV['API_SERVER'], user: 'deploy', roles: %w{app}
 
 set :deploy_to, "/var/www/staging.api.rounded.services"
 set :branch, "develop"
-set :puma_bind, "tcp://0.0.0.0:#{ENV['API_PORT']}"
+set :puma_bind, "tcp://0.0.0.0:9314"
+# set :puma_bind, "tcp://0.0.0.0:#{::ENV['API_PORT']}"
 
 # Configuration
 # =============
@@ -32,8 +33,6 @@ set :puma_bind, "tcp://0.0.0.0:#{ENV['API_PORT']}"
 # For available Capistrano configuration variables see the documentation page.
 # http://capistranorb.com/documentation/getting-started/configuration/
 # Feel free to add new variables to customise your setup.
-
-
 
 # Custom SSH Options
 # ==================
