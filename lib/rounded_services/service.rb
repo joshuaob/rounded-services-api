@@ -10,7 +10,7 @@ module RoundedServices
           :amount => 25000,
           :currency => "gbp",
           :source => token,
-          :description => "Rounded Services Job Listing (#{jobListing.reference}) £250 - Charge for #{job_listing.email}",
+          :description => "Rounded Services Job Listing (#{job_listing.reference}) £250 - Charge for #{job_listing.email}",
           :capture => false,
           :metadata => {
             job_listing_reference: job_listing.reference
