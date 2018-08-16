@@ -14,6 +14,12 @@ gem 'jsonapi-serializers', '~> 1.0', '>= 1.0.1'
 gem 'jwt', '~> 2.1'
 gem 'stripe', '~> 3.21'
 
+gem 'capistrano', '~> 3.11'
+gem 'capistrano-bundler', '~> 1.3'
+gem 'capistrano3-puma', '~> 3.1', '>= 3.1.1'
+gem 'capistrano-rake', '~> 0.2.0'
+gem 'capistrano-rbenv', '~> 2.1', '>= 2.1.3'
+
 # gem 'aws-sdk', '~> 3.0', '>= 3.0.1'
 # gem 'measurable', '~> 0.0.9'
 # gem 'geocoder', '~> 1.4', '>= 1.4.5'
@@ -33,9 +39,4 @@ end
 
 group :development, :test do
   gem 'pry', '~> 0.11.3'
-  gem 'capistrano', '~> 3.11'
-  gem 'capistrano-bundler', '~> 1.3'
-  gem 'capistrano3-puma', '~> 3.1', '>= 3.1.1'
-  gem 'capistrano-rake', '~> 0.2.0'
-  gem 'capistrano-rbenv', '~> 2.1', '>= 2.1.3'
 end
