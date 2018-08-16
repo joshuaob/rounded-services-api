@@ -33,7 +33,7 @@ namespace :deploy do
     on roles(:app) do
       invoke 'puma:make_dirs'
       stage = fetch(:stage)
-      upload!(".env.#{stage}", "#{current_path}/.env")
+      upload!("#{stage}.env", "#{current_path}/.env")
     end
   end
 
