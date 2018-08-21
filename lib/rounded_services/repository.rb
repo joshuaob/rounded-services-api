@@ -43,7 +43,7 @@ module RoundedServices
 
       def find_unpublished(page_no:, page_size:)
         result = []
-        dataset.where(:published_at => nil).order(Sequel.desc(:created_at)).paginate(page_no, page_size).each do |attributes|
+        dataset.where(:inactive_at => nil).where(:published_at => nil).order(Sequel.desc(:created_at)).paginate(page_no, page_size).each do |attributes|
           result << Entity::JobListing.new(attributes: attributes) if attributes
         end
         result
@@ -51,7 +51,7 @@ module RoundedServices
 
       def find_published(page_no:, page_size:)
         result = []
-        dataset.exclude(:published_at => nil).order(Sequel.desc(:published_at)).paginate(page_no, page_size).each do |attributes|
+        dataset.exclude(:inactive_at => nil).exclude(:published_at => nil).order(Sequel.desc(:published_at)).paginate(page_no, page_size).each do |attributes|
           result << Entity::JobListing.new(attributes: attributes) if attributes
         end
         result
