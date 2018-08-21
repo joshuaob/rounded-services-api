@@ -53,7 +53,8 @@ module RoundedServices
                     :location,
                     :published_at,
                     :paid_at,
-                    :stripe_charge_id
+                    :stripe_charge_id,
+                    :inactive_at
 
       def valid?
         if email.nil? || VALID_EMAIL_REGEX.match(email).nil?
@@ -69,6 +70,10 @@ module RoundedServices
 
       def paid?
         !paid_at.nil?
+      end
+
+      def active?
+        !inactive_at.nil?
       end
     end
 
