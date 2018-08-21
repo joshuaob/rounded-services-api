@@ -35,6 +35,7 @@ gem 'capistrano-rbenv', '~> 2.1', '>= 2.1.3'
 
 group :test do
   gem 'rspec', '~> 3.8'
+  gem 'factory_bot', '~> 4.11'
 end
 
 group :development, :test do
