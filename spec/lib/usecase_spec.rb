@@ -1,3 +1,7 @@
+def symbolize_keys(hash)
+  Hash[hash.map{|(k,v)| [k.to_sym,v]}]
+end
+
 module RoundedServices
   module Usecase
     module JobListing
@@ -5,8 +9,10 @@ module RoundedServices
         context "when admin" do
           let(:stripe) { instance_double(Service::Stripe, authorize_job_listing_charge: OpenStruct.new(id: "123")) }
           let(:usecase) do
-            account = Repository::Account.new.create(email: "joshuaaob@gmail.com")
-            form = Factory::JobListing.build(attributes_hash: {account: account})
+            account = create(:account, admin: true)
+            attributes_hash = symbolize_keys(build(:job_listing).to_row)
+            attributes_hash.merge!(account: account)
+            form = RoundedServices::Form::JobListing.new(attributes_hash: attributes_hash)
             Create.new(stripe: stripe).execute(form: form)
           end
 
@@ -22,14 +28,20 @@ module RoundedServices
         context "when guest" do
           context "when stripe token is not present" do
             it "raises missing stripe token error" do
-              form = Factory::JobListing.build
+              attributes_hash = symbolize_keys(build(:job_listing).to_row)
+              form = RoundedServices::Form::JobListing.new(attributes_hash: attributes_hash)
               expect{Create.new.execute(form: form)}.to raise_error(RoundedServices::Error::MissingStipeTokenError)
             end
           end
 
           context "when stripe token is present" do
             let(:stripe) { instance_double(Service::Stripe, authorize_job_listing_charge: OpenStruct.new(id: "123")) }
-            let(:form) { Factory::JobListing.build(attributes_hash: { stripe_token: "tok_visa" }) }
+            let(:form) do
+              attributes_hash = symbolize_keys(build(:job_listing).to_row)
+              attributes_hash.merge!(stripe_token: "tok_visa")
+              RoundedServices::Form::JobListing.new(attributes_hash: attributes_hash)
+            end
+
             before do
               @usecase = Create.new(stripe: stripe).execute(form: form)
             end
@@ -55,12 +67,13 @@ module RoundedServices
           let(:stripe) { instance_double(Service::Stripe, capture_job_listing_charge: OpenStruct.new(id: "123")) }
 
           context "when publishing own job listing" do
-            let(:admin_account) { Repository::Account.new.create(email: "joshuaaob@gmail.com") }
+            let(:account) { create(:account, admin: true) }
             let(:job_listing) do
-              Factory::JobListing.create(form: Factory::JobListing.build(attributes_hash: { account: admin_account }))
+              create(:job_listing, account_id: account.id, email: account.email)
             end
+
             before do
-              @usecase = Publish.new(stripe: stripe).execute(reference: job_listing.reference, account: admin_account)
+              @usecase = Publish.new(stripe: stripe).execute(reference: job_listing.reference, account: account)
             end
 
             it "does not trigger stripe to capture a payment" do
@@ -75,15 +88,17 @@ module RoundedServices
               expect(@usecase.job_listing.published_at).to be_truthy
             end
 
-            it "notifies the job listing owner"
+            xit "notifies the job listing owner"
           end
 
           context "when publishing job listings by others" do
-            let(:admin_account) { Repository::Account.new.create(email: "joshuaaob@gmail.com") }
-            let(:non_admin_account) { Repository::Account.new.create(email: "user@rounded.services") }
+            let(:admin_account) { create(:account, admin: true) }
+            # let(:non_admin_account) { Repository::Account.new.create(email: "user@rounded.services") }
             let(:job_listing) do
-              Factory::JobListing.create(form: Factory::JobListing.build(attributes_hash: { account: non_admin_account, stripe_token: "tok_visa"}))
+              create(:job_listing, stripe_charge_id: "123" )
+              # Factory::JobListing.create(form: Factory::JobListing.build(attributes_hash: { account: non_admin_account, stripe_token: "tok_visa"}))
             end
+
             before do
               @usecase = Publish.new(stripe: stripe).execute(reference: job_listing.reference, account: admin_account)
             end
@@ -100,16 +115,15 @@ module RoundedServices
               expect(@usecase.job_listing.published_at).to be_truthy
             end
 
-            it "notifies the job listing owner"
+            xit "notifies the job listing owner"
           end
         end
 
         context "when non admin" do
           let(:job_listing) do
-            account = Repository::Account.new.create(email: "joshuaaob@gmail.com")
-            Factory::JobListing.create(form: Factory::JobListing.build(attributes_hash: {account: account}))
+            create(:job_listing, stripe_charge_id: "123" )
           end
-          let(:non_admin_account) { Repository::Account.new.create(email: "guest@rounded.services") }
+          let(:non_admin_account) { create(:account) }
 
           it "raises unauthorized error" do
             expect{Publish.new.execute(reference: job_listing.reference, account: non_admin_account)}.to raise_error(RoundedServices::Error::UnauthorizedError)
@@ -118,8 +132,7 @@ module RoundedServices
 
         context "when guest" do
           let(:job_listing) do
-            account = Repository::Account.new.create(email: "joshuaaob@gmail.com")
-            Factory::JobListing.create(form: Factory::JobListing.build(attributes_hash: {account: account}))
+            create(:job_listing, stripe_charge_id: "123" )
           end
 
           it "raises unauthorized error" do
@@ -127,43 +140,102 @@ module RoundedServices
           end
         end
       end
+
+      describe Update do
+        context "when admin" do
+          let(:admin_account) { create(:account, admin: true) }
+          let(:job_listing) { create(:job_listing) }
+          let(:job_listing_repository) { instance_double(Repository::JobListing, update: true, find_by_reference: Entity::JobListing.new) }
+          let(:attributes_hash) do
+            attributes_hash = {
+              title: "senior full stack developer"
+            }
+          end
+          let(:form) { RoundedServices::Form::JobListing.new(attributes_hash: attributes_hash) }
+
+          before do
+            @usecase = described_class.new(job_listing_repository: job_listing_repository).execute(form: form, reference: job_listing.reference, account: admin_account)
+          end
+
+          it "triggers update on repository with job listing" do
+            expect(job_listing_repository).to have_received(:update).with(form: form, reference: job_listing.reference)
+          end
+
+          it "triggers find by reference on Repository with job listing" do
+            expect(job_listing_repository).to have_received(:find_by_reference).with(reference: job_listing.reference)
+          end
+
+          it "returns a job listing" do
+            expect(@usecase.job_listing).to be_a(Entity::JobListing)
+          end
+        end
+
+        context "when non-admin" do
+          let(:job_listing) { create(:job_listing) }
+          let(:job_listing_repository) { instance_double(Repository::JobListing, update: true, find_by_reference: Entity::JobListing.new) }
+          let(:attributes_hash) do
+            attributes_hash = {
+              title: "senior full stack developer"
+            }
+          end
+          let(:form) { RoundedServices::Form::JobListing.new(attributes_hash: attributes_hash) }
+
+          it "raises Error::UnauthorizedError" do
+            @usecase =
+            expect{
+              described_class.new(job_listing_repository: job_listing_repository).execute(form: form, reference: job_listing.reference)
+            }.to raise_error(Error::UnauthorizedError)
+          end
+        end
+      end
+
+      describe Deactivate do
+        context "when admin" do
+          let(:admin_account) { create(:account, admin: true) }
+          let(:job_listing) { create(:job_listing) }
+          let(:job_listing_repository) { instance_double(Repository::JobListing, mark_as_inactive: true, find_by_reference: Entity::JobListing.new) }
+          let(:attributes_hash) do
+            attributes_hash = {
+              title: "senior full stack developer"
+            }
+          end
+          let(:form) { RoundedServices::Form::JobListing.new(attributes_hash: attributes_hash) }
+
+          before do
+            @usecase = described_class.new(job_listing_repository: job_listing_repository).execute(reference: job_listing.reference, account: admin_account)
+          end
+
+          it "triggers mark as inactive on repository with job listing" do
+            expect(job_listing_repository).to have_received(:mark_as_inactive).with(reference: job_listing.reference)
+          end
+
+          it "triggers find by reference on Repository with job listing" do
+            expect(job_listing_repository).to have_received(:find_by_reference).with(reference: job_listing.reference)
+          end
+
+          it "returns a job listing" do
+            expect(@usecase.job_listing).to be_a(Entity::JobListing)
+          end
+        end
+
+        context "when non-admin" do
+          let(:job_listing) { create(:job_listing) }
+          let(:job_listing_repository) { instance_double(Repository::JobListing, update: true, find_by_reference: Entity::JobListing.new) }
+          let(:attributes_hash) do
+            attributes_hash = {
+              title: "senior full stack developer"
+            }
+          end
+          let(:form) { RoundedServices::Form::JobListing.new(attributes_hash: attributes_hash) }
+
+          it "raises Error::UnauthorizedError" do
+            @usecase =
+            expect{
+              described_class.new(job_listing_repository: job_listing_repository).execute(reference: job_listing.reference)
+            }.to raise_error(Error::UnauthorizedError)
+          end
+        end
+      end
     end
   end
 end
-
-# module RoundedServices
-#   module Service
-#     module JobListing
-#       describe CaptureCharge do
-#         context "when admin" do
-#           it "does something"
-#         end
-#
-#         context "when guest" do
-#           it "does something"
-#         end
-#       end
-#       describe Refund do
-#         context "when admin" do
-#           it "does something"
-#         end
-#
-#         context "when guest" do
-#           it "does something"
-#         end
-#       end
-#     end
-#
-#     module JobListing
-#       describe FindCharge do
-#         context "when admin" do
-#           it "does something"
-#         end
-#
-#         context "when guest" do
-#           it "does something"
-#         end
-#       end
-#     end
-#   end
-# end
