@@ -29,6 +29,52 @@ module RoundedServices
         end
       end
 
+      class Update
+        attr_accessor :job_listing_repository,
+                      :job_listing,
+                      :stripe
+
+        def initialize(job_listing_repository: Repository::JobListing.new,
+                      stripe: Service::Stripe.new)
+          self.job_listing_repository = job_listing_repository
+          self.stripe = stripe
+        end
+
+        def execute(form:, reference:, account: nil)
+          if !account || !account.admin
+            raise Error::UnauthorizedError
+          end
+
+          # TODO: skip/strip stripe charge id
+          job_listing_repository.update(form: form, reference: reference)
+          self.job_listing = job_listing_repository.find_by_reference(reference: reference)
+          self
+        end
+      end
+
+      class Deactivate
+        attr_accessor :job_listing_repository,
+                      :job_listing,
+                      :stripe
+
+        def initialize(job_listing_repository: Repository::JobListing.new,
+                      stripe: Service::Stripe.new)
+          self.job_listing_repository = job_listing_repository
+          self.stripe = stripe
+        end
+
+        def execute(reference:, account: nil)
+          if !account || !account.admin
+            raise Error::UnauthorizedError
+          end
+
+          # TODO: skip/strip stripe charge id
+          job_listing_repository.mark_as_inactive(reference: reference)
+          self.job_listing = job_listing_repository.find_by_reference(reference: reference)
+          self
+        end
+      end
+
       class FindOne
         attr_accessor :job_listing_repository,
                       :job_listing
