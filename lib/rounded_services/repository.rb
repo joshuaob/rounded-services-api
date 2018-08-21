@@ -36,6 +36,11 @@ module RoundedServices
         RoundedServices::Entity::JobListing.new(attributes: attributes) if attributes
       end
 
+      def find_by_id(id:)
+        attributes = dataset.where(:id => id).first
+        RoundedServices::Entity::JobListing.new(attributes: attributes) if attributes
+      end
+
       def find_unpublished(page_no:, page_size:)
         result = []
         dataset.where(:published_at => nil).order(Sequel.desc(:created_at)).paginate(page_no, page_size).each do |attributes|
@@ -64,8 +69,6 @@ module RoundedServices
         dataset.where(:reference => reference).update(:stripe_charge_id => stripe_charge_id)
       end
 
-      private
-
       def save(job_listing:)
         job_listing.reference = generate_reference
         job_listing.created_at = Time.now.utc
@@ -77,6 +80,14 @@ module RoundedServices
         job_listing.id = dataset.insert(job_listing.to_row)
 
         job_listing
+      end
+
+      def update(form:, reference:)
+        dataset.where(:reference => reference).update(form.to_hash)
+      end
+
+      def mark_as_inactive(reference:)
+        dataset.where(:reference => reference).update(:inactive_at => Time.now.utc)
       end
     end
 
