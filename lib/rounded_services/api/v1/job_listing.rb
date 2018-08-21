@@ -21,6 +21,9 @@ module RoundedServices
         options "/job-listings/:id/publish" do
         end
 
+        options "/job-listings/:id/deactivate" do
+        end
+
         get '/status' do
           body "#{@config.env} up and running."
         end
@@ -73,6 +76,22 @@ module RoundedServices
 
         patch '/job-listings/:id/publish' do
           usecase = RoundedServices::Usecase::JobListing::Publish.new.execute(reference: params[:id], account: find_or_create_account)
+          job_listing_serializer.serialize(usecase.job_listing).to_json
+        end
+
+        patch '/job-listings/:id/deactivate' do
+          usecase = RoundedServices::Usecase::JobListing::Deactivate.new.execute(reference: params[:id], account: find_or_create_account)
+          job_listing_serializer.serialize(usecase.job_listing).to_json
+        end
+
+        patch '/job-listings/:id' do
+          if attributes_hash.nil?
+            usecase = RoundedServices::Usecase::JobListing::FindOne.execute(reference: params[:id])
+            return job_listing_serializer.serialize(usecase.job_listing).to_json
+          end
+
+          form = RoundedServices::Form::JobListing.new(attributes_hash: attributes_hash)
+          usecase = RoundedServices::Usecase::JobListing::Update.new.execute(form: form,reference: params[:id], account: find_or_create_account)
           job_listing_serializer.serialize(usecase.job_listing).to_json
         end
       end
