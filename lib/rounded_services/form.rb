@@ -28,7 +28,7 @@ module RoundedServices
 
       def initialize(attributes_hash:)
         self.keywords = attributes_hash[:keywords]
-        self.url = attributes_hash[:url].downcase if attributes_hash[:url]
+        self.url = attributes_hash[:url] if attributes_hash[:url]
         self.email = attributes_hash[:email].downcase if attributes_hash[:email]
         self.title = attributes_hash[:title].downcase if attributes_hash[:title]
         self.job_type = attributes_hash[:job_type].downcase if attributes_hash[:job_type]
