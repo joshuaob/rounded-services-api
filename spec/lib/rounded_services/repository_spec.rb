@@ -1,6 +1,21 @@
+def clear_job_listings
+  RoundedServices::Repository::JobListing.new.dataset.delete
+end
+
 module RoundedServices
   module Repository
     describe JobListing do
+      let(:repo) { described_class.new }
+
+      describe "#count_published_today" do
+        it "returns the count of the job listings published today" do
+          clear_job_listings
+          create_list(:job_listing, 3, published_at: Time.now.utc)
+          create_list(:job_listing, 3)
+          expect(repo.count_published_today).to eq(3)
+        end
+      end
+
       describe "#find_live"
 
       describe "#create" do

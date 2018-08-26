@@ -64,11 +64,24 @@ module RoundedServices
 
             form.page_size = page_size
             form.page_no = current_page
+
+            links = {}
+            links[:pagination] = {}
+            links[:pagination][:current] = current_page
+            links[:pagination][:prev] = previous_page
+            links[:pagination][:next] = next_page
+            links[:pagination][:first] = first_page
+            links[:pagination][:last] = last_page
+
+            # links[:self] = "#{collection_url}?page[number]=#{current_page}&page[size]=#{page_size}"
+            # links[:prev] = "#{collection_url}?page[number]=#{previous_page}&page[size]=#{page_size}"
+            # links[:next] = "#{collection_url}?page[number]=#{next_page}&page[size]=#{page_size}"
+            # links[:first] = "#{collection_url}?page[number]=1&page[size]=5"
+            # links[:last] = "#{collection_url}?page[number]=13&page[size]=5"
           else
             form.page_size = 25
             form.page_no = 1
           end
-
 
           if params[:filter]
             if params[:filter][:published]
@@ -81,22 +94,7 @@ module RoundedServices
 
               if params[:filter][:published] == "true"
                 usecase = RoundedServices::Usecase::JobListing::FindPublished.execute(form: form)
-
-                links = {}
-                links[:pagination] = {}
-                links[:pagination][:current] = current_page
-                links[:pagination][:prev] = previous_page
-                links[:pagination][:next] = next_page
-                links[:pagination][:first] = first_page
-                links[:pagination][:last] = last_page
-
-                # links[:self] = "#{collection_url}?page[number]=#{current_page}&page[size]=#{page_size}"
-                # links[:prev] = "#{collection_url}?page[number]=#{previous_page}&page[size]=#{page_size}"
-                # links[:next] = "#{collection_url}?page[number]=#{next_page}&page[size]=#{page_size}"
-                # links[:first] = "#{collection_url}?page[number]=1&page[size]=5"
-                # links[:last] = "#{collection_url}?page[number]=13&page[size]=5"
-
-                body job_listing_serializer.serialize(usecase.job_listings, is_collection: true, meta: {links: links}).to_json
+                body job_listing_serializer.serialize(usecase.job_listings, is_collection: true, meta: {links: links, todays_total: usecase.todays_total}).to_json
               end
             end
           end

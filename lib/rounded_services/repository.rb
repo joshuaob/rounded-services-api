@@ -93,6 +93,11 @@ module RoundedServices
       def count_published
         dataset.where(:inactive_at => nil).exclude(:published_at => nil).count
       end
+
+      def count_published_today
+        todays_date = Date.today.to_s
+        dataset.where(:inactive_at => nil).exclude(:published_at => nil).where(Sequel.lit("published_at::date = date '#{todays_date}'")).count
+      end
     end
 
     class Account < Base

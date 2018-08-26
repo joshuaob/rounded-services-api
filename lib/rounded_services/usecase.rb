@@ -108,7 +108,8 @@ module RoundedServices
 
       class FindPublished
         attr_accessor :job_listing_repository,
-                      :job_listings
+                      :job_listings,
+                      :todays_total
 
         def initialize(job_listing_repository: Repository::JobListing.new)
           self.job_listing_repository = job_listing_repository
@@ -117,6 +118,7 @@ module RoundedServices
         def self.execute(form:)
           usecase = new
           usecase.job_listings = usecase.job_listing_repository.find_published(page_no: form.page_no, page_size: form.page_size)
+          usecase.todays_total = usecase.job_listing_repository.count_published_today
           usecase
         end
       end
