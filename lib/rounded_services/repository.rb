@@ -89,6 +89,10 @@ module RoundedServices
       def mark_as_inactive(reference:)
         dataset.where(:reference => reference).update(:inactive_at => Time.now.utc)
       end
+
+      def count_published
+        dataset.where(:inactive_at => nil).exclude(:published_at => nil).count
+      end
     end
 
     class Account < Base
