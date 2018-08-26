@@ -27,3 +27,7 @@ end
 group :development, :test do
   gem 'pry', '~> 0.11.3'
 end
+
+group :development do
+  gem 'guard-rspec', '~> 4.7', '>= 4.7.3', require: false
+end
