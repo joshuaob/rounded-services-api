@@ -1,33 +1,13 @@
-# require 'sucker_punch'
-# require "securerandom"
 require 'sinatra/base'
 require "sinatra/namespace"
-# require 'sib-api-v3-sdk'
-
-# require 'dotenv/load'
-
 require 'pg'
 require 'sequel'
-# # Sequel.default_timezone = :utc
 require 'raven'
-
 require 'jsonapi-serializers'
 require 'jwt'
 require 'net/http'
 require 'uri'
-
 require 'stripe'
-
-# require "measurable"
-# require "geocoder"
-# require 'httparty'
-# require 'loofah'
-
-# require "jwe"
-# require "openssl"
-# require "base64"
-
-# require "mechanize"
 
 if ["development", "test"].include?(::ENV["RACK_ENV"])
   require "pry"
@@ -46,16 +26,10 @@ Raven.configure do |config|
   config.dsn = RoundedServices::Config.instance.sentry_dsn
 end
 
-
-# SibApiV3Sdk.configure do |config|
-#   config.api_key['api-key'] = RoundedServices::Config.instance.sib_api_key
-# end
-
 def capture_exception(e)
   Raven.capture_exception(e)
 end
 
-# require_relative 'rounded_services/mailer'
 require_relative 'rounded_services/entity'
 require_relative 'rounded_services/repository'
 require_relative 'rounded_services/form'
