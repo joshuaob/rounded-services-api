@@ -65,6 +65,10 @@ module RoundedServices
         dataset.where(:reference => reference).update(:paid_at => Time.now.utc)
       end
 
+      def mark_as_featured(reference:)
+        dataset.where(:reference => reference).update(:featured_at => Time.now.utc)
+      end
+
       def update_stripe_charge_id(reference:, stripe_charge_id:)
         dataset.where(:reference => reference).update(:stripe_charge_id => stripe_charge_id)
       end

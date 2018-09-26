@@ -12,7 +12,7 @@ module RoundedServices
           self.stripe = stripe
         end
 
-        def execute(form:)
+        def execute1(form:)
           job_listing = job_listing_repository.create(form: form)
 
           if !form.stripe_token.nil?
@@ -21,6 +21,27 @@ module RoundedServices
           else
             if !form.account || !form.account.admin
               raise Error::MissingStipeTokenError
+            end
+          end
+
+          self.job_listing = job_listing_repository.find_by_reference(reference: job_listing.reference)
+          self
+        end
+
+        def execute(form:)
+          if form.account && form.account.admin
+            job_listing = job_listing_repository.create(form: form)
+          else
+
+            if form.stripe_token.nil?
+              # featured false
+              job_listing = job_listing_repository.create(form: form)
+            else
+              # featured true
+              job_listing = job_listing_repository.create(form: form)
+              stripe_charge = stripe.authorize_job_listing_charge(token: form.stripe_token, job_listing: job_listing)
+              job_listing_repository.update_stripe_charge_id(reference: job_listing.reference, stripe_charge_id: stripe_charge.id)
+              job_listing_repository.mark_as_featured(reference: job_listing.reference)
             end
           end
 

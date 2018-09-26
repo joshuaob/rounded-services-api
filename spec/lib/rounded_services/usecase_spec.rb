@@ -20,22 +20,17 @@ module RoundedServices
             expect(usecase.job_listing.id).to be_truthy
           end
 
+          it "creates a non featured job listing"  do
+            expect(usecase.job_listing.featured_at).to be_nil
+          end
+
           it "does not trigger stripe to authorize payment" do
             expect(stripe).to_not have_received(:authorize_job_listing_charge)
           end
         end
 
         context "when guest" do
-          context "when stripe token is not present" do
-            it "raises missing stripe token error" do
-              attributes_hash = symbolize_keys(build(:job_listing).to_row)
-              form = RoundedServices::Form::JobListing.new(attributes_hash: attributes_hash)
-              expect{Create.new.execute(form: form)}.to raise_error(RoundedServices::Error::MissingStipeTokenError)
-            end
-          end
-
-          context "when stripe token is present" do
-            let(:stripe) { instance_double(Service::Stripe, authorize_job_listing_charge: OpenStruct.new(id: "123")) }
+          context "when featured" do
             let(:form) do
               attributes_hash = symbolize_keys(build(:job_listing).to_row)
               attributes_hash.merge!(stripe_token: "tok_visa")
@@ -43,20 +38,38 @@ module RoundedServices
             end
 
             before do
-              @usecase = Create.new(stripe: stripe).execute(form: form)
+              @usecase = Create.new.execute(form: form)
             end
 
             it "creates a job listing" do
               expect(@usecase.job_listing.id).to be_truthy
             end
 
-            it "triggers stripe to authorize the charge" do
-              expect(stripe).to have_received(:authorize_job_listing_charge)
-              # .with(token: "tok_visa", job_listing: @usecase.job_listing)
+            it "creates a non featured job listing"  do
+              expect(@usecase.job_listing.featured_at).to_not be_nil
             end
 
             it "captures the stripe charge id" do
               expect(@usecase.job_listing.stripe_charge_id).to be_truthy
+            end
+          end
+
+          context "when not featured" do
+            let(:form) do
+              attributes_hash = symbolize_keys(build(:job_listing).to_row)
+              RoundedServices::Form::JobListing.new(attributes_hash: attributes_hash)
+            end
+
+            before do
+              @usecase = Create.new.execute(form: form)
+            end
+
+            it "creates a job listing" do
+              expect(@usecase.job_listing.id).to be_truthy
+            end
+
+            it "creates a non featured job listing"  do
+              expect(@usecase.job_listing.featured_at).to be_nil
             end
           end
         end
