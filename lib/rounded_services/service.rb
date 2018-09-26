@@ -7,10 +7,10 @@ module RoundedServices
 
       def authorize_job_listing_charge(token:, job_listing:)
         ::Stripe::Charge.create(
-          :amount => 25000,
+          :amount => 2500,
           :currency => "gbp",
           :source => token,
-          :description => "Rounded Services Job Listing (#{job_listing.reference}) £250 - Charge for #{job_listing.email}",
+          :description => "Rounded Services Job Listing (#{job_listing.reference}) £25 - Charge for #{job_listing.email}",
           :capture => false,
           :metadata => {
             job_listing_reference: job_listing.reference
