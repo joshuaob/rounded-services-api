@@ -94,22 +94,22 @@ module RoundedServices
     end
   end
 
-  module SensitiveData
-    def self.encrypt(payload:)
-      JWE.encrypt(payload.to_json, private_key.public_key)
-    end
-
-    def self.decrypt(token:)
-      JSON.parse(JWE.decrypt(token, private_key))
-    end
-
-    private
-
-    def self.private_key
-      private_key_pathname = Pathname.new(::ENV["PITCH_IT_PRIVATE_KEY_PATH"])
-      OpenSSL::PKey::RSA.new(File.read(private_key_pathname))
-    end
-  end
+  # module SensitiveData
+  #   def self.encrypt(payload:)
+  #     JWE.encrypt(payload.to_json, private_key.public_key)
+  #   end
+  #
+  #   def self.decrypt(token:)
+  #     JSON.parse(JWE.decrypt(token, private_key))
+  #   end
+  #
+  #   private
+  #
+  #   def self.private_key
+  #     private_key_pathname = Pathname.new(::ENV["PITCH_IT_PRIVATE_KEY_PATH"])
+  #     OpenSSL::PKey::RSA.new(File.read(private_key_pathname))
+  #   end
+  # end
 
   module Error
     class MissingStipeTokenError < StandardError ;end
