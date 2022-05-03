@@ -4,8 +4,8 @@ ruby "2.5.1"
 
 gem 'pg', '~> 1.0'
 gem 'sequel', '~> 5.11'
-gem 'sinatra', '~> 2.0', '>= 2.0.3'
-gem 'sinatra-contrib', '~> 2.0', '>= 2.0.3'
+gem 'sinatra', '~> 2.2'
+gem 'sinatra-contrib', '~> 2.2'
 gem 'rake', '~> 12.3', '>= 12.3.1'
 gem 'puma', '~> 3.12'
 gem 'sentry-raven', '~> 2.7', '>= 2.7.4'
